@@ -602,7 +602,7 @@ input[type="range"]::-moz-range-thumb {
     </div>
 
     <div class="results-breakdown" id="tla-breakdown">
-      <h3>Loan Structure</h3>
+      <h3>Loan Structure &amp; Leverage</h3>
       <div class="breakdown-row" style="font-weight:700;">
         <span class="label" style="color:var(--text-primary);">Total Loan Amount</span>
         <span class="value" id="res-tla">--</span>
@@ -615,6 +615,20 @@ input[type="range"]::-moz-range-thumb {
         <span class="label" id="res-holdback-label">Construction Holdback</span>
         <span class="value" id="res-holdback">--</span>
       </div>
+      <div style="border-top:1px solid var(--gray-200); margin:8px 0;"></div>
+      <div class="breakdown-row" id="row-ltaiv">
+        <span class="label">Day 1 LTV (LTAIV)</span>
+        <span class="value" id="res-ltaiv">--</span>
+      </div>
+      <div class="breakdown-row" id="row-ltc">
+        <span class="label">Loan to Cost (LTC)</span>
+        <span class="value" id="res-ltc">--</span>
+      </div>
+      <div class="breakdown-row" id="row-ltarv">
+        <span class="label">Loan to ARV (LTARV)</span>
+        <span class="value" id="res-ltv">--</span>
+      </div>
+      <p class="constraint-note" id="constraint-note" style="display:none; font-size:12px; color:var(--gray-500); margin-top:10px; font-style:italic;"></p>
       <div class="breakdown-row" style="font-size:12px; color:var(--gray-500); border-bottom:none; padding:4px 0 0;">
         <span class="label" id="res-tla-detail" style="color:var(--gray-500);"></span>
         <span class="value" id="res-program" style="font-weight:500; font-size:12px; color:var(--gray-500);"></span>
@@ -649,23 +663,6 @@ input[type="range"]::-moz-range-thumb {
         <div style="font-size:12px; color:var(--gray-500);" id="slider-ltc-lbl">LTC: --</div>
         <div style="font-size:12px; color:var(--gray-500);" id="slider-ltarv-lbl">LTARV: --</div>
       </div>
-    </div>
-
-    <div class="results-breakdown">
-      <h3>Leverage Summary</h3>
-      <div class="breakdown-row" id="row-ltaiv">
-        <span class="label">Day 1 LTV (Loan to As-Is Value)</span>
-        <span class="value" id="res-ltaiv">--</span>
-      </div>
-      <div class="breakdown-row" id="row-ltc">
-        <span class="label">Loan to Cost (LTC)</span>
-        <span class="value" id="res-ltc">--</span>
-      </div>
-      <div class="breakdown-row" id="row-ltarv">
-        <span class="label">Loan to ARV (LTARV)</span>
-        <span class="value" id="res-ltv">--</span>
-      </div>
-      <p class="constraint-note" id="constraint-note" style="display:none; font-size:12px; color:var(--gray-500); margin-top:10px; font-style:italic;"></p>
     </div>
 
     <div class="results-breakdown">
@@ -1505,42 +1502,62 @@ function setupHoldbackButtons() {
   const maxTLA_exception = Math.min(arv * 0.70, totalCost * 0.90);
   const maxTLA = Math.max(maxTLA_normal, maxTLA_exception);
 
-  // Max holdback = maxTLA (when day1 = 0). But day1 also can't exceed baseVal * maxLTAIV.
-  // At a given holdback%, holdback = pct/100 * bufferedCost, day1 = maxTLA - holdback.
-  // The holdback is viable as long as day1 >= 0, i.e. holdback <= maxTLA.
+  // LTAIV hard cap: day1 can never exceed baseVal * 60% (GUC without permits)
+  const maxDay1_ltaiv = Math.round(baseVal * (maxLTAIV || 0.60));
+
+  // For each holdback %, compute if it's viable:
+  // holdback = pct/100 * bufferedCost, day1 = maxTLA - holdback
+  // day1 must be >= 0 AND day1 <= maxDay1_ltaiv
+  // So: holdback <= maxTLA AND holdback >= maxTLA - maxDay1_ltaiv
+  // Max holdback = min(maxTLA, bufferedCost)
+  // But also day1 = maxTLA - holdback <= maxDay1_ltaiv => holdback >= maxTLA - maxDay1_ltaiv
+  const minHoldbackForLTAIV = Math.max(0, maxTLA - maxDay1_ltaiv);
   const maxHoldback = Math.min(maxTLA, bufferedCost);
   const maxPct = bufferedCost > 0 ? Math.floor(maxHoldback / bufferedCost * 100) : 0;
+  const minPctForLTAIV = bufferedCost > 0 ? Math.ceil(minHoldbackForLTAIV / bufferedCost * 100) : 0;
 
   // Determine which constraint is binding
-  let capReason = '';
+  let capReasons = [];
   const ltarvAtMax = arv > 0 ? maxTLA / arv : 0;
   const ltcAtMax = totalCost > 0 ? maxTLA / totalCost : 0;
-  if (ltarvAtMax <= 0.755) capReason = 'LTARV capped at ' + (ltarvAtMax * 100).toFixed(0) + '% (max 75%)';
-  if (ltcAtMax <= 0.855 && ltcAtMax < ltarvAtMax) capReason = 'LTC capped at ' + (ltcAtMax * 100).toFixed(0) + '% (max 85%)';
+  if (ltarvAtMax <= 0.755) capReasons.push('LTARV capped at ' + (ltarvAtMax * 100).toFixed(0) + '% (max 75%)');
+  if (ltcAtMax <= 0.855) capReasons.push('LTC capped at ' + (ltcAtMax * 100).toFixed(0) + '% (max 85%)');
+  if (maxLTAIV && maxLTAIV <= 0.65) capReasons.push('LTAIV capped at ' + (maxLTAIV * 100).toFixed(0) + '% (max ' + (maxLTAIV * 100).toFixed(0) + '%)');
   // Check if exception regime applies
   if (maxTLA_exception > maxTLA_normal) {
     const exLtarv = arv > 0 ? maxTLA_exception / arv : 0;
-    if (exLtarv <= 0.705) capReason = 'LTARV capped at 70% (exception regime: LTC > 85%)';
+    if (exLtarv <= 0.705) capReasons.push('LTARV capped at 70% (exception regime: LTC > 85%)');
+  }
+  const capReason = capReasons.join('. ');
+
+  // For each holdback %, check: holdback fits within maxTLA AND day1 fits within LTAIV cap
+  function isViable(p) {
+    const hb = Math.round(p / 100 * bufferedCost);
+    if (hb > maxTLA) return false; // holdback exceeds max loan
+    const d1 = maxTLA - hb;
+    if (d1 > maxDay1_ltaiv) return false; // day1 would breach LTAIV
+    return true;
   }
 
-  // Generate button options. Start at 85 and step by 5, but if max < 85, offer lower options.
+  // Find the effective max viable pct
+  let effectiveMaxPct = 0;
+  for (let p = maxPct; p >= 0; p--) {
+    if (isViable(p)) { effectiveMaxPct = p; break; }
+  }
+
+  // Generate button options. Start at 85 and step by 5, but adjust if max is lower.
   let options = [];
-  if (maxPct >= 85) {
-    // Standard options: 85, 90, 95, 100 (capped at maxPct)
+  if (effectiveMaxPct >= 85) {
     for (let p = 85; p <= 100; p += 5) {
-      options.push({ pct: p, enabled: p <= maxPct });
+      options.push({ pct: p, enabled: isViable(p) });
     }
-  } else if (maxPct >= 5) {
-    // Low max: offer steps leading up to the max
-    // Round maxPct down to nearest 5
-    const topStep = Math.floor(maxPct / 5) * 5;
+  } else if (effectiveMaxPct >= 5) {
+    const topStep = Math.floor(effectiveMaxPct / 5) * 5;
     const steps = [topStep - 15, topStep - 10, topStep - 5, topStep].filter(p => p > 0);
-    // Ensure we have at least 2 options
     if (steps.length < 2) steps.unshift(Math.max(5, steps[0] - 5));
-    options = steps.map(p => ({ pct: p, enabled: true }));
+    options = steps.map(p => ({ pct: p, enabled: isViable(p) }));
   } else {
-    // Extremely constrained: just offer what's possible
-    options = [{ pct: Math.max(1, maxPct), enabled: true }];
+    options = [{ pct: Math.max(1, effectiveMaxPct), enabled: true }];
   }
 
   // Build buttons
@@ -1585,7 +1602,7 @@ function setupHoldbackButtons() {
 function selectHoldbackPct(pct) {
   if (!gucState) return;
   pct = Math.max(0, Math.min(100, parseInt(pct)));
-  const { arv, baseVal, bufferedCost, totalCost } = gucState;
+  const { arv, baseVal, bufferedCost, totalCost, maxLTAIV } = gucState;
 
   // Highlight selected button
   document.querySelectorAll('.holdback-opt').forEach(btn => {
@@ -1608,6 +1625,9 @@ function selectHoldbackPct(pct) {
   const maxTLA_exception = Math.min(arv * 0.70, totalCost * 0.90);
   const maxTLA = Math.round(Math.max(maxTLA_normal, maxTLA_exception));
 
+  // LTAIV hard cap on day1
+  const maxDay1 = Math.round(baseVal * (maxLTAIV || 0.60));
+
   let tla = maxTLA;
   let day1 = tla - holdback;
 
@@ -1617,13 +1637,26 @@ function selectHoldbackPct(pct) {
     constraintMsg = 'Holdback exceeds max loan. Day 1 reduced to $0.';
   }
 
+  // Enforce LTAIV cap on day1
+  if (day1 > maxDay1) {
+    day1 = maxDay1;
+    tla = day1 + holdback;
+    constraintMsg = 'Day 1 capped at $' + maxDay1.toLocaleString() + ' (' + ((maxLTAIV || 0.60) * 100).toFixed(0) + '% LTAIV).';
+  }
+
   // Enforce dual-regime: if LTC > 85%, LTARV must cap at 70%
   const ltcCheck = totalCost > 0 ? tla / totalCost : 0;
   const ltarvCheck = arv > 0 ? tla / arv : 0;
   if (ltcCheck > 0.85 && ltarvCheck > 0.70) {
     tla = Math.round(arv * 0.70);
-    day1 = Math.max(0, tla - holdback);
+    day1 = Math.min(day1, Math.max(0, tla - holdback));
     constraintMsg = 'LTC > 85%: LTARV capped at 70%.';
+  }
+
+  // Re-enforce LTAIV after dual-regime adjustment
+  if (day1 > maxDay1) {
+    day1 = maxDay1;
+    tla = day1 + holdback;
   }
 
   const finalLtaiv = baseVal > 0 ? day1 / baseVal : 0;
