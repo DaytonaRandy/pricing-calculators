@@ -39,7 +39,7 @@ body {
   position: sticky; top: 0; z-index: 100;
   background: rgba(242, 239, 233, 0.95);
   backdrop-filter: blur(10px);
-  padding: 16px 40px;
+  padding: 20px 40px;
   display: flex; align-items: center; justify-content: space-between;
   border-bottom: 1px solid var(--gray-100);
 }
@@ -202,6 +202,18 @@ body {
 }
 .ineligible-msg p { font-size: 14px; color: #dc2626; }
 
+.edit-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px; }
+.edit-item { background: var(--cream); border-radius: 8px; padding: 12px 14px; }
+.edit-item .edit-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--gray-500); margin-bottom: 2px; }
+.edit-item .edit-value { font-size: 15px; font-weight: 600; color: var(--text-primary); }
+.edit-item select, .edit-item input {
+  width: 100%; padding: 8px 10px; border: 1.5px solid var(--gray-100); border-radius: 6px;
+  font-size: 14px; font-family: 'DM Sans', sans-serif; color: var(--text-primary); background: var(--white);
+  margin-top: 4px;
+}
+.edit-item .currency-wrap input { padding-left: 24px; }
+.edit-item .currency-wrap::before { left: 10px; font-size: 14px; }
+
 .seasoning-note {
   font-size: 12px; color: var(--green); font-weight: 500;
   margin-top: 4px; padding: 6px 10px;
@@ -306,7 +318,7 @@ input[type="range"]::-moz-range-thumb {
 
 /* ─── Footer ─── */
 .footer {
-  background: var(--green); color: rgba(255,255,255,0.7); padding: 40px 40px 24px;
+  background: var(--green); color: rgba(255,255,255,0.7); padding: 56px 40px;
 }
 .footer a { color: var(--gold); text-decoration: none; }
 .footer a:hover { text-decoration: underline; }
@@ -338,7 +350,7 @@ input[type="range"]::-moz-range-thumb {
 <!-- NAV -->
 <nav class="nav">
   <a href="https://ledgertc.com" class="nav-logo">
-    <img src="https://ledgertc.com/logo-color.png" alt="Ledger Trade &amp; Capital" style="height:40px;">
+    <img src="https://ledgertc.com/logo-color.png" alt="Ledger Trade &amp; Capital" style="height:38px;">
   </a>
   <div class="nav-links">
     <div class="nav-dropdown">
@@ -443,6 +455,17 @@ input[type="range"]::-moz-range-thumb {
     <h2>Your Project</h2>
     <p class="step-subtitle">Details about the property and scope of work.</p>
 
+    <div class="field-group">
+      <label>Project Type</label>
+      <select id="projectType" onchange="updateProjectTypeUI()">
+        <option value="">Select...</option>
+        <option value="Fix and Flip">Fix and Flip</option>
+        <option value="Ground Up">Ground Up Construction</option>
+        <option value="Bridge">Bridge</option>
+      </select>
+      <div class="field-error" id="err-projectType">Please select a project type.</div>
+    </div>
+
     <div class="ineligible-msg" id="ineligible-msg">
       <p id="ineligible-text"></p>
     </div>
@@ -470,6 +493,15 @@ input[type="range"]::-moz-range-thumb {
       <div class="field-error" id="err-dealType">Please select a deal type.</div>
     </div>
 
+    <div class="field-group" id="gucExitGroup" style="display:none;">
+      <label>Is this a GUC exit?</label>
+      <p class="field-hint">Bridge purchase of a property the borrower built via ground-up construction.</p>
+      <div class="toggle-group">
+        <button type="button" class="toggle-btn" data-field="gucExit" data-value="No" onclick="toggleSelect(this)">No</button>
+        <button type="button" class="toggle-btn" data-field="gucExit" data-value="Yes" onclick="toggleSelect(this)">Yes</button>
+      </div>
+    </div>
+
     <!-- Purchase Date: only for refi -->
     <div class="field-group" id="purchaseDateGroup" style="display:none;">
       <label>Original Purchase Date</label>
@@ -493,26 +525,28 @@ input[type="range"]::-moz-range-thumb {
         </div>
         <div class="field-error" id="err-asIsValue">Please enter the as-is value.</div>
         <div class="seasoning-note" id="seasoning-note" style="display:none;">
-          Within 6-month seasoning period. As-is value = purchase price.
+          Purchased within last 5 months. This is treated as a delayed purchase. As-is value = purchase price.
         </div>
       </div>
     </div>
 
+    <div id="rehabArvSection">
     <div class="field-group" id="rehabGroup">
-      <label>Renovation / Construction Budget</label>
-      <p class="field-hint">Total budgeted construction or rehab cost (we'll buffer 10% automatically).</p>
+      <label id="label-rehab">Renovation / Construction Budget</label>
+      <p class="field-hint" id="hint-rehab">Total budgeted construction or rehab cost (we'll buffer 10% automatically).</p>
       <div class="currency-wrap">
         <input type="text" id="rehabBudget" placeholder="250,000" oninput="formatCurrency(this)">
       </div>
       <div class="field-error" id="err-rehabBudget">Please enter a construction/rehab budget.</div>
     </div>
 
-    <div class="field-group">
-      <label>After-Repair / Final Sales Value</label>
+    <div class="field-group" id="arvGroup">
+      <label id="label-arv">After-Repair / Final Sales Value</label>
       <div class="currency-wrap">
         <input type="text" id="arv" placeholder="850,000" oninput="formatCurrency(this)">
       </div>
       <div class="field-error" id="err-arv">Please enter the expected final value.</div>
+    </div>
     </div>
 
     <div class="btn-row">
@@ -561,23 +595,29 @@ input[type="range"]::-moz-range-thumb {
         <div class="result-detail" id="res-rate-detail"></div>
       </div>
       <div class="result-card">
-        <div class="result-label">Day 1 Loan Amount</div>
-        <div class="result-value" id="res-day1">--</div>
-        <div class="result-detail" id="res-day1-detail"></div>
+        <div class="result-label">Est. Monthly Interest</div>
+        <div class="result-value" id="res-monthly">--</div>
+        <div class="result-detail" id="res-monthly-detail"></div>
       </div>
-      <div class="result-card">
-        <div class="result-label">Total Loan Amount</div>
-        <div class="result-value" id="res-tla">--</div>
-        <div class="result-detail" id="res-tla-detail"></div>
+    </div>
+
+    <div class="results-breakdown" id="tla-breakdown">
+      <h3>Loan Structure</h3>
+      <div class="breakdown-row" style="font-weight:700;">
+        <span class="label" style="color:var(--text-primary);">Total Loan Amount</span>
+        <span class="value" id="res-tla">--</span>
       </div>
-      <div class="result-card">
-        <div class="result-label">Construction Holdback</div>
-        <div class="result-value" id="res-holdback">--</div>
-        <div class="result-detail" id="res-holdback-detail"></div>
+      <div class="breakdown-row" id="row-day1-breakdown">
+        <span class="label" id="res-day1-label">Day 1 Funding</span>
+        <span class="value" id="res-day1">--</span>
       </div>
-      <div class="result-card">
-        <div class="result-label">Loan Program</div>
-        <div class="result-value" id="res-program" style="font-size:20px;">--</div>
+      <div class="breakdown-row" id="row-holdback-breakdown">
+        <span class="label" id="res-holdback-label">Construction Holdback</span>
+        <span class="value" id="res-holdback">--</span>
+      </div>
+      <div class="breakdown-row" style="font-size:12px; color:var(--gray-500); border-bottom:none; padding:4px 0 0;">
+        <span class="label" id="res-tla-detail" style="color:var(--gray-500);"></span>
+        <span class="value" id="res-program" style="font-weight:500; font-size:12px; color:var(--gray-500);"></span>
       </div>
     </div>
 
@@ -618,22 +658,23 @@ input[type="range"]::-moz-range-thumb {
 
     <div class="results-breakdown">
       <h3>Leverage Summary</h3>
-      <div class="breakdown-row">
+      <div class="breakdown-row" id="row-ltaiv">
         <span class="label">Day 1 LTV (Loan to As-Is Value)</span>
         <span class="value" id="res-ltaiv">--</span>
       </div>
-      <div class="breakdown-row">
+      <div class="breakdown-row" id="row-ltc">
         <span class="label">Loan to Cost (LTC)</span>
         <span class="value" id="res-ltc">--</span>
       </div>
-      <div class="breakdown-row">
+      <div class="breakdown-row" id="row-ltarv">
         <span class="label">Loan to ARV (LTARV)</span>
         <span class="value" id="res-ltv">--</span>
       </div>
+      <p class="constraint-note" id="constraint-note" style="display:none; font-size:12px; color:var(--gray-500); margin-top:10px; font-style:italic;"></p>
     </div>
 
     <div class="results-breakdown">
-      <h3>Estimated Fees</h3>
+      <h3>Estimated Loan Costs</h3>
       <div class="breakdown-row">
         <span class="label">Origination (2 pts)</span>
         <span class="value" id="res-origination">--</span>
@@ -643,19 +684,11 @@ input[type="range"]::-moz-range-thumb {
         <span class="value" id="res-uwfee">--</span>
       </div>
       <div class="breakdown-row">
-        <span class="label">Legal Fee</span>
-        <span class="value">$1,500</span>
-      </div>
-      <div class="breakdown-row">
-        <span class="label">Doc Fee</span>
-        <span class="value">$900</span>
-      </div>
-      <div class="breakdown-row">
-        <span class="label">Appraisal (est.)</span>
-        <span class="value" id="res-appraisal">--</span>
+        <span class="label">Legal &amp; Documentation</span>
+        <span class="value">$1,195</span>
       </div>
       <div class="breakdown-row" style="font-weight:700; border-top: 2px solid var(--gray-300); margin-top: 4px; padding-top: 12px;">
-        <span class="label" style="color: var(--text-primary);">Total Estimated Fees</span>
+        <span class="label" style="color: var(--text-primary);">Total Estimated Loan Closing Costs</span>
         <span class="value" id="res-totalfees">--</span>
       </div>
     </div>
@@ -665,7 +698,7 @@ input[type="range"]::-moz-range-thumb {
     </div>
 
     <div class="btn-row">
-      <button class="btn btn-secondary" onclick="prevStep(4)">&larr; Adjust Inputs</button>
+      <button class="btn btn-secondary" onclick="showEditInputs()">&larr; Edit Inputs</button>
     </div>
 
     <!-- Lead Form -->
@@ -695,13 +728,107 @@ input[type="range"]::-moz-range-thumb {
     </div>
   </div>
 
+  <!-- STEP 5: Edit Inputs -->
+  <div class="step-card" id="step-5">
+    <h2>Edit Your Inputs</h2>
+    <p class="step-subtitle">Change any value below and recalculate.</p>
+
+    <div class="edit-grid">
+      <div class="edit-item">
+        <div class="edit-label">Projects Completed</div>
+        <select id="edit-experience"></select>
+      </div>
+      <div class="edit-item">
+        <div class="edit-label">Credit Score</div>
+        <select id="edit-fico"></select>
+      </div>
+      <div class="edit-item">
+        <div class="edit-label">Foreign National</div>
+        <select id="edit-foreignNational">
+          <option value="No">No</option>
+          <option value="Yes">Yes</option>
+        </select>
+      </div>
+      <div class="edit-item">
+        <div class="edit-label">Project Type</div>
+        <select id="edit-projectType"></select>
+      </div>
+      <div class="edit-item">
+        <div class="edit-label">Property Type</div>
+        <select id="edit-assetType"></select>
+      </div>
+      <div class="edit-item">
+        <div class="edit-label">Deal Type</div>
+        <select id="edit-dealType"></select>
+      </div>
+      <div class="edit-item">
+        <div class="edit-label">Purchase Price</div>
+        <div class="currency-wrap"><input type="text" id="edit-purchasePrice" oninput="formatCurrency(this)"></div>
+      </div>
+      <div class="edit-item" id="edit-aiv-item">
+        <div class="edit-label">As-Is Value</div>
+        <div class="currency-wrap"><input type="text" id="edit-asIsValue" oninput="formatCurrency(this)"></div>
+      </div>
+      <div class="edit-item" id="edit-rehab-item">
+        <div class="edit-label">Rehab / Construction Budget</div>
+        <div class="currency-wrap"><input type="text" id="edit-rehabBudget" oninput="formatCurrency(this)"></div>
+      </div>
+      <div class="edit-item" id="edit-arv-item">
+        <div class="edit-label">After-Repair Value</div>
+        <div class="currency-wrap"><input type="text" id="edit-arv" oninput="formatCurrency(this)"></div>
+      </div>
+      <div class="edit-item">
+        <div class="edit-label">Loan Term</div>
+        <select id="edit-loanTerm">
+          <option value="12">12 Months</option>
+          <option value="15">15 Months</option>
+          <option value="18">18 Months</option>
+        </select>
+      </div>
+      <div class="edit-item">
+        <div class="edit-label">Recourse</div>
+        <select id="edit-recourse">
+          <option value="Full Recourse">Full Recourse</option>
+          <option value="Partial Recourse">Partial Recourse</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn btn-secondary" onclick="goToStep(4)">&larr; Back to Results</button>
+      <button class="btn btn-primary" onclick="recalcFromEdit()">Recalculate &rarr;</button>
+    </div>
+
+    <!-- Lead Form (duplicate for edit page) -->
+    <div class="lead-form-section">
+      <div id="lead-form-content-edit">
+        <h3>Want a Formal Quote?</h3>
+        <p class="lead-subtitle">Enter your details and a loan officer will reach out within one business day.</p>
+        <form name="rtl-calculator-lead-edit" method="POST" data-netlify="true" netlify-honeypot="bot-field" onsubmit="return submitLead(event)">
+          <input type="hidden" name="form-name" value="rtl-calculator-lead">
+          <input type="hidden" name="bot-field">
+          <input type="hidden" name="calculator-results" id="hidden-results-edit">
+          <div class="field-row" style="gap:12px;">
+            <input type="text" name="first-name" placeholder="First name" required>
+            <input type="text" name="last-name" placeholder="Last name" required>
+          </div>
+          <input type="email" name="email" placeholder="Email address">
+          <input type="tel" name="phone" placeholder="Phone number">
+          <p style="font-size:12px; opacity:0.6; margin:-8px 0 8px;">Email or phone required (at least one).</p>
+          <textarea name="notes" placeholder="Anything else we should know? (optional)"></textarea>
+          <button type="submit" class="btn btn-primary">Submit Request &rarr;</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
 </div>
 
 <!-- FOOTER -->
 <footer class="footer">
   <div class="footer-inner">
     <div class="footer-col footer-logo-col">
-      <img src="https://ledgertc.com/logo-inverse.png" alt="Ledger Trade &amp; Capital" style="height:36px;">
+      <img src="https://ledgertc.com/logo-inverse.png" alt="Ledger Trade &amp; Capital" style="height:42px;">
     </div>
     <div class="footer-col footer-center">
       <p>&copy; 2026 Ledger Trade &amp; Capital. All rights reserved.</p>
@@ -711,9 +838,6 @@ input[type="range"]::-moz-range-thumb {
       <p>60 Broad Street, Suite 2428, New York, NY 10004</p>
       <p><a href="tel:201-749-1691">201-749-1691</a> | <a href="mailto:Info@ledgertc.com">Info@ledgertc.com</a> | <a href="https://www.linkedin.com/company/ledger-trade-capital/" target="_blank">LinkedIn</a></p>
     </div>
-  </div>
-  <div class="footer-disclaimer">
-    Estimates are for informational purposes only. All loans subject to credit approval, underwriting review, and property eligibility. NMLS# pending. Equal Housing Lender.
   </div>
 </footer>
 
@@ -804,13 +928,47 @@ function getEffectiveAIV() {
 }
 
 // ─── DEAL TYPE / PURCHASE DATE HANDLERS ───
+function updateProjectTypeUI() {
+  const projectType = document.getElementById('projectType').value;
+  const rehabArvSection = document.getElementById('rehabArvSection');
+  const rehabLabel = document.getElementById('label-rehab');
+  const rehabHint = document.getElementById('hint-rehab');
+  const arvLabel = document.getElementById('label-arv');
+
+  if (projectType === 'Bridge') {
+    rehabArvSection.style.display = 'none';
+  } else {
+    rehabArvSection.style.display = 'block';
+    if (projectType === 'Ground Up') {
+      rehabLabel.textContent = 'Construction Budget';
+      rehabHint.textContent = 'Total budgeted construction cost (we\'ll buffer 10% automatically).';
+      arvLabel.textContent = 'Completed Value';
+    } else {
+      rehabLabel.textContent = 'Renovation Budget';
+      rehabHint.textContent = 'Total budgeted rehab cost (we\'ll buffer 10% automatically).';
+      arvLabel.textContent = 'After-Repair Value';
+    }
+  }
+  // Also update deal type UI (GUC exit toggle depends on project type)
+  updateDealTypeUI();
+}
+
 function updateDealTypeUI() {
   const dealType = document.getElementById('dealType').value;
+  const projectType = document.getElementById('projectType').value;
   const priceLabel = document.getElementById('label-price');
   const purchaseDateGroup = document.getElementById('purchaseDateGroup');
   const aivGroup = document.getElementById('aivGroup');
   const seasoningNote = document.getElementById('seasoning-note');
-  const aivInput = document.getElementById('asIsValue');
+  const gucExitGroup = document.getElementById('gucExitGroup');
+
+  // GUC Exit toggle: show for Bridge + Purchase only
+  if (projectType === 'Bridge' && dealType === 'Purchase') {
+    gucExitGroup.style.display = 'block';
+  } else {
+    gucExitGroup.style.display = 'none';
+    toggleValues.gucExit = 'No';
+  }
 
   if (dealType === 'Purchase') {
     priceLabel.textContent = 'Purchase Price';
@@ -843,7 +1001,7 @@ function updateSeasoningUI() {
   const now = new Date();
   const monthsDiff = (now.getFullYear() - purchDate.getFullYear()) * 12 + (now.getMonth() - purchDate.getMonth());
 
-  if (monthsDiff <= 6) {
+  if (monthsDiff <= 5) {
     // Within seasoning: hide AIV, show note
     aivGroup.style.display = 'block';
     document.getElementById('asIsValue').value = '';
@@ -876,11 +1034,13 @@ function validateStep(step) {
     }
   }
   if (step === 2) {
+    valid = validateField('projectType') && valid;
     valid = validateField('assetType') && valid;
     valid = validateField('dealType') && valid;
     valid = validateCurrency('purchasePrice') && valid;
 
     const dealType = document.getElementById('dealType').value;
+    const projectType = document.getElementById('projectType').value;
     if (dealType !== 'Purchase') {
       // Validate purchase date
       const dateVal = document.getElementById('purchaseDate').value;
@@ -896,10 +1056,10 @@ function validateStep(step) {
       }
     }
 
-    if (dealType !== 'Bridge') {
+    if (projectType !== 'Bridge') {
       valid = validateCurrency('rehabBudget') && valid;
+      valid = validateCurrency('arv') && valid;
     }
-    valid = validateCurrency('arv') && valid;
   }
   return valid;
 }
@@ -944,11 +1104,12 @@ function getExperienceCount(expStr) {
 }
 
 // ─── DETERMINE LOAN PROGRAM ───
-function determineLoanProgram(dealType, rehabBudget, purchasePrice, asIsValue) {
-  if (dealType === 'Bridge') return 'Bridge';
+function determineLoanProgram(projectType, rehabBudget, purchasePrice, asIsValue) {
+  if (projectType === 'Bridge') return 'Bridge';
+  if (projectType === 'Ground Up') return 'GUC';
+  // Fix and Flip: determine Light vs Heavy by rehab ratio
   const baseValue = Math.min(purchasePrice, asIsValue);
   const rehabRatio = baseValue > 0 ? rehabBudget / baseValue : 0;
-  if (rehabRatio > 0.75) return 'GUC';
   if (rehabRatio > 0.5) return 'FnF - Heavy';
   return 'FnF - Light';
 }
@@ -980,19 +1141,26 @@ const bridgeMatrix = {
 };
 
 function lookupLeverage(experience, program, dealType) {
+  let source = null;
   if (program === 'Bridge') {
     const key = experience + '|' + dealType;
-    return bridgeMatrix[key] || null;
+    source = bridgeMatrix[key];
+  } else {
+    let projectType;
+    if (program === 'GUC') projectType = 'GUC';
+    else if (program === 'FnF - Heavy') projectType = 'Heavy Rehab';
+    else projectType = 'Light Rehab';
+    const purchaseOrRefi = (dealType === 'Purchase') ? 'Purchase' : 'Refi';
+    let key = experience + '|' + projectType + '|' + purchaseOrRefi;
+    if (churchillMatrix[key] !== undefined) source = churchillMatrix[key];
+    else {
+      key = experience + '|' + projectType + '|Any';
+      if (churchillMatrix[key] !== undefined) source = churchillMatrix[key];
+    }
   }
-  let projectType;
-  if (program === 'GUC') projectType = 'GUC';
-  else if (program === 'FnF - Heavy') projectType = 'Heavy Rehab';
-  else projectType = 'Light Rehab';
-  const purchaseOrRefi = (dealType === 'Purchase') ? 'Purchase' : 'Refi';
-  let key = experience + '|' + projectType + '|' + purchaseOrRefi;
-  if (churchillMatrix[key] !== undefined) return churchillMatrix[key];
-  key = experience + '|' + projectType + '|Any';
-  return churchillMatrix[key] !== undefined ? churchillMatrix[key] : null;
+  // Return a mutable copy so overlays can adjust without modifying the matrix
+  if (source === null || source === undefined) return null;
+  return Object.assign({}, source);
 }
 
 // ─── TIER DETERMINATION ───
@@ -1002,6 +1170,7 @@ function determineTier(inputs, leverage) {
   if (experience === 'No Experience') return 2;
   if (ltcRatio > 0.90) return 2;
   if ((program === 'FnF - Heavy' || program === 'GUC') && ltcRatio > 0.85) return 2;
+  if ((program === 'FnF - Heavy' || program === 'GUC') && ltvRatio > 0.70) return 2;
   if (tla > 3000000) return 2;
   if (program === 'Bridge' && dealType === 'C/O Refinance') return 2;
   return 1;
@@ -1011,9 +1180,33 @@ function determineTier(inputs, leverage) {
 function calculateRate(tier, assetType, fico) {
   const baseRate = tier === 1 ? 9.250 : 9.750; // already in % with 37.5bps buffer
   let adder = 0;
-  if (assetType === 'Condominium') adder += 1.0;
-  if (fico < 680) adder += 1.0;
+  // 100bp premium: Condo OR FICO < 680 (non-additive per Churchill pricing matrix)
+  if (assetType === 'Condominium' || fico < 680) adder = 1.0;
   return ceilEighth(baseRate + adder);
+}
+
+// ─── INELIGIBILITY HELPER ───
+function showIneligible(msg) {
+  document.getElementById('res-rate').textContent = 'N/A';
+  document.getElementById('res-rate-detail').textContent = msg;
+  document.getElementById('res-monthly').textContent = 'N/A';
+  document.getElementById('res-monthly-detail').textContent = '';
+  document.getElementById('res-day1').textContent = 'N/A';
+  document.getElementById('res-day1-label').textContent = 'Day 1 Funding';
+  document.getElementById('res-holdback-label').textContent = 'Construction Holdback';
+  document.getElementById('res-day1-detail').textContent = '';
+  document.getElementById('res-tla').textContent = 'N/A';
+  document.getElementById('res-tla-detail').textContent = '';
+  document.getElementById('res-holdback').textContent = 'N/A';
+  document.getElementById('res-holdback-detail').textContent = '';
+  document.getElementById('res-program').textContent = 'N/A';
+  document.getElementById('res-ltaiv').textContent = 'N/A';
+  document.getElementById('res-ltc').textContent = 'N/A';
+  document.getElementById('res-ltv').textContent = 'N/A';
+  document.getElementById('res-origination').textContent = 'N/A';
+  document.getElementById('res-uwfee').textContent = 'N/A';
+  document.getElementById('res-totalfees').textContent = 'N/A';
+  document.getElementById('guc-slider-section').style.display = 'none';
 }
 
 // ─── MAIN CALCULATION ───
@@ -1025,20 +1218,39 @@ function calculateRTL() {
   const foreignNational = toggleValues.foreignNational;
   const assetType = document.getElementById('assetType').value;
   const dealType = document.getElementById('dealType').value;
+  const projectType = document.getElementById('projectType').value;
   const purchasePrice = parseCurrency('purchasePrice');
   const asIsValue = getEffectiveAIV();
-  const rehabBudget = parseCurrency('rehabBudget');
-  const arv = parseCurrency('arv');
+  const rehabBudget = projectType === 'Bridge' ? 0 : parseCurrency('rehabBudget');
+  const arv = projectType === 'Bridge' ? asIsValue : parseCurrency('arv');
   const loanTerm = parseInt(document.getElementById('loanTerm').value);
 
   const experience = getExperienceLevel(expStr);
   const expCount = getExperienceCount(expStr);
 
-  let program = determineLoanProgram(dealType, rehabBudget, purchasePrice, asIsValue);
+  let program = determineLoanProgram(projectType, rehabBudget, purchasePrice, asIsValue);
 
-  // GUC eligibility: experienced needs 5+ projects
+  // FIX #7: 0-experience budget cap: budget cannot exceed 30% of AIV
+  if (expStr === '0' && program !== 'Bridge') {
+    const maxBudget = Math.round(asIsValue * 0.30);
+    if (rehabBudget > maxBudget) {
+      goToStep(4);
+      showIneligible('With 0 projects completed, the rehab budget cannot exceed 30% of the as-is value ($' + maxBudget.toLocaleString() + '). Please adjust your budget or gain more experience.');
+      return;
+    }
+  }
+
+  // FIX #8: GUC eligibility - 3-4 experience allowed at < 80% LTC, 5+ required otherwise
+  // We'll allow 3-4 experience GUC but cap their maxLTC at 0.80
+  let gucLtcCap = null;
   if (program === 'GUC' && experience === 'Experienced' && expCount < 5) {
-    program = 'FnF - Heavy';
+    // 3-4 experience: allow GUC but only up to 80% LTC
+    gucLtcCap = 0.80;
+  }
+
+  // FIX #3: Condo + GUC not allowed
+  if (assetType === 'Condominium' && program === 'GUC') {
+    program = 'FnF - Heavy'; // Downgrade: Condo GUC not permitted
   }
 
   // Buffer construction cost by 10%
@@ -1048,24 +1260,49 @@ function calculateRTL() {
 
   if (!lev) {
     goToStep(4);
-    document.getElementById('res-rate').textContent = 'N/A';
-    document.getElementById('res-rate-detail').textContent = 'This combination is not eligible under our current programs.';
-    document.getElementById('res-day1').textContent = 'N/A';
-    document.getElementById('res-day1-detail').textContent = '';
-    document.getElementById('res-tla').textContent = 'N/A';
-    document.getElementById('res-tla-detail').textContent = '';
-    document.getElementById('res-holdback').textContent = 'N/A';
-    document.getElementById('res-holdback-detail').textContent = '';
-    document.getElementById('res-program').textContent = program;
-    document.getElementById('res-ltaiv').textContent = 'N/A';
-    document.getElementById('res-ltc').textContent = 'N/A';
-    document.getElementById('res-ltv').textContent = 'N/A';
-    document.getElementById('res-origination').textContent = 'N/A';
-    document.getElementById('res-uwfee').textContent = 'N/A';
-    document.getElementById('res-appraisal').textContent = 'N/A';
-    document.getElementById('res-totalfees').textContent = 'N/A';
-    document.getElementById('guc-slider-section').style.display = 'none';
+    showIneligible('This combination is not eligible under our current programs.');
     return;
+  }
+
+  // FIX #2: FICO < 680 overlay
+  // Must be Experienced or Institutional; 10% leverage reduction; no cash out
+  if (fico < 680 && fico >= 660) {
+    if (experience === 'No Experience') {
+      goToStep(4);
+      showIneligible('Borrowers with FICO below 680 must have at least 3 completed projects (Experienced tier).');
+      return;
+    }
+    if (dealType === 'C/O Refinance') {
+      goToStep(4);
+      showIneligible('Cash-out refinance is not available for borrowers with FICO below 680.');
+      return;
+    }
+    // Apply 10% reduction to leverage caps
+    if (lev.ltaiv) lev.ltaiv = Math.round((lev.ltaiv * 0.90) * 100) / 100;
+    if (lev.ltc) lev.ltc = Math.round((lev.ltc * 0.90) * 100) / 100;
+    if (lev.ltv) lev.ltv = Math.round((lev.ltv * 0.90) * 100) / 100;
+  }
+  if (fico < 660) {
+    goToStep(4);
+    showIneligible('Minimum FICO score is 660. This deal does not qualify.');
+    return;
+  }
+
+  // FIX #3: Condo 10% leverage reduction
+  if (assetType === 'Condominium') {
+    if (lev.ltaiv) lev.ltaiv = Math.round((lev.ltaiv * 0.90) * 100) / 100;
+    if (lev.ltc) lev.ltc = Math.round((lev.ltc * 0.90) * 100) / 100;
+    if (lev.ltv) lev.ltv = Math.round((lev.ltv * 0.90) * 100) / 100;
+  }
+
+  // FIX #8: Apply 3-4 experience GUC LTC cap
+  if (gucLtcCap && lev.ltc > gucLtcCap) {
+    lev.ltc = gucLtcCap;
+  }
+
+  // FIX #10: Bridge GUC exit - cap LTV at 80%
+  if (program === 'Bridge' && dealType === 'Purchase' && toggleValues.gucExit === 'Yes') {
+    if (lev.ltv > 0.80) lev.ltv = 0.80;
   }
 
   let day1, tla, holdback;
@@ -1090,6 +1327,34 @@ function calculateRTL() {
     tla = Math.round(Math.min(tla1, tla2));
     day1 = Math.min(day1, tla);
     holdback = Math.round(tla - day1);
+
+    // GUC dual-regime constraint: if LTC > 85%, LTARV must cap at 70%
+    if (program === 'GUC') {
+      const tc = baseVal + bufferedCost;
+      const checkLTC = tc > 0 ? tla / tc : 0;
+      const checkLTARV = arv > 0 ? tla / arv : 0;
+      if (checkLTC > 0.85 && checkLTARV > 0.70) {
+        tla = Math.round(arv * 0.70);
+        day1 = Math.min(day1, tla);
+        holdback = Math.round(tla - day1);
+      }
+    }
+  }
+
+  // FIX #9: Loan amount limits
+  const minLoan = program === 'GUC' ? 150000 : 125000;
+  const maxLoan = 5000000;
+  if (tla < minLoan) {
+    goToStep(4);
+    showIneligible('Minimum loan amount is $' + minLoan.toLocaleString() + (program === 'GUC' ? ' for GUC' : '') + '. This deal sizes to $' + tla.toLocaleString() + '.');
+    return;
+  }
+  if (tla > maxLoan) {
+    tla = maxLoan;
+    if (program !== 'Bridge') {
+      holdback = Math.round(tla - day1);
+      if (holdback < 0) { day1 = tla; holdback = 0; }
+    }
   }
 
   // Leverage ratios
@@ -1109,11 +1374,9 @@ function calculateRTL() {
 
   // Fees
   const origFee = Math.round(tla * 0.02);
-  const uwFee = Math.max(Math.round(tla * 0.001 / 650) * 650, 1000);
-  const appraisalCost = 575;
-  const legalFee = 1500;
-  const docFee = 900;
-  const totalFees = origFee + uwFee + legalFee + docFee + appraisalCost;
+  const uwFee = 1495;
+  const legalDocFee = 1195;
+  const totalFees = origFee + uwFee + legalDocFee;
 
   let programDisplay = program;
   if (program === 'FnF - Light') programDisplay = 'Fix & Flip (Light Rehab)';
@@ -1129,21 +1392,69 @@ function calculateRTL() {
 
   document.getElementById('res-rate').textContent = rateLow;
   document.getElementById('res-rate-detail').textContent = 'Range: ' + rateLow + ' \u2013 ' + rateHigh + ' (Tier ' + tier + ')';
-  document.getElementById('res-day1').textContent = '$' + day1.toLocaleString();
-  document.getElementById('res-day1-detail').textContent = program !== 'Bridge' ? (ltaivRatio * 100).toFixed(1) + '% of as-is value' : '';
+
+  // Monthly interest payment (interest-only on day 1 amount)
+  const monthlyInterest = Math.round(day1 * (rate / 100) / 12);
+  document.getElementById('res-monthly').textContent = '$' + monthlyInterest.toLocaleString();
+  document.getElementById('res-monthly-detail').textContent = 'Interest only on Day 1 balance';
+
+  // TLA breakdown
   document.getElementById('res-tla').textContent = '$' + tla.toLocaleString();
-  document.getElementById('res-tla-detail').textContent = program !== 'Bridge' ? (ltcRatio * 100).toFixed(1) + '% LTC, ' + (ltvRatio * 100).toFixed(1) + '% LTARV' : (ltvRatio * 100).toFixed(1) + '% LTV';
-  document.getElementById('res-holdback').textContent = holdback > 0 ? '$' + holdback.toLocaleString() : 'N/A (Bridge)';
-  document.getElementById('res-holdback-detail').textContent = holdback > 0 && bufferedCost > 0 ? Math.round(holdback / bufferedCost * 100) + '% of buffered rehab' : '';
+  document.getElementById('res-day1').textContent = '$' + day1.toLocaleString();
+  const day1Pct = tla > 0 ? Math.round(day1 / tla * 100) : 0;
+  document.getElementById('res-day1-label').textContent = 'Day 1 Funding (' + day1Pct + '% of total loan)';
+
+  if (program === 'Bridge') {
+    document.getElementById('row-holdback-breakdown').style.display = 'none';
+    document.getElementById('res-tla-detail').textContent = (ltvRatio * 100).toFixed(1) + '% LTV';
+  } else {
+    document.getElementById('row-holdback-breakdown').style.display = 'flex';
+    const holdbackPct = bufferedCost > 0 ? Math.round(holdback / bufferedCost * 100) : 0;
+    document.getElementById('res-holdback').textContent = '$' + holdback.toLocaleString();
+    document.getElementById('res-holdback-label').textContent = 'Construction Holdback (' + holdbackPct + '% of rehab)';
+    document.getElementById('res-tla-detail').textContent = (ltcRatio * 100).toFixed(1) + '% LTC \u00b7 ' + (ltvRatio * 100).toFixed(1) + '% LTARV';
+  }
   document.getElementById('res-program').textContent = programDisplay;
 
-  document.getElementById('res-ltaiv').textContent = program === 'Bridge' ? 'N/A' : (ltaivRatio * 100).toFixed(1) + '%';
-  document.getElementById('res-ltc').textContent = program === 'Bridge' ? 'N/A' : (ltcRatio * 100).toFixed(1) + '%';
+  // Leverage summary with constraint highlighting
+  const isBridge = program === 'Bridge';
+  document.getElementById('res-ltaiv').textContent = isBridge ? 'N/A' : (ltaivRatio * 100).toFixed(1) + '%';
+  document.getElementById('res-ltc').textContent = isBridge ? 'N/A' : (ltcRatio * 100).toFixed(1) + '%';
   document.getElementById('res-ltv').textContent = (ltvRatio * 100).toFixed(1) + '%';
+
+  // Determine binding constraint
+  const constraintNote = document.getElementById('constraint-note');
+  if (!isBridge && lev) {
+    const atLTAIV = lev.ltaiv && Math.abs(ltaivRatio - lev.ltaiv) < 0.005;
+    const atLTC = lev.ltc && Math.abs(ltcRatio - lev.ltc) < 0.005;
+    const atLTARV = lev.ltv && Math.abs(ltvRatio - lev.ltv) < 0.005;
+    // Bold the binding row(s)
+    document.getElementById('row-ltaiv').style.fontWeight = atLTAIV ? '700' : '';
+    document.getElementById('row-ltaiv').style.color = atLTAIV ? 'var(--green)' : '';
+    document.getElementById('row-ltc').style.fontWeight = atLTC ? '700' : '';
+    document.getElementById('row-ltc').style.color = atLTC ? 'var(--green)' : '';
+    document.getElementById('row-ltarv').style.fontWeight = atLTARV ? '700' : '';
+    document.getElementById('row-ltarv').style.color = atLTARV ? 'var(--green)' : '';
+
+    let binding = [];
+    if (atLTAIV) binding.push('as-is value (LTAIV)');
+    if (atLTC) binding.push('total cost (LTC)');
+    if (atLTARV) binding.push('after-repair value (LTARV)');
+    if (binding.length > 0) {
+      constraintNote.style.display = 'block';
+      constraintNote.textContent = 'Loan is capped by ' + binding.join(' and ') + '. Total loan amount may increase or decrease with a different appraisal.';
+    } else {
+      constraintNote.style.display = 'none';
+    }
+  } else {
+    document.getElementById('row-ltaiv').style.fontWeight = '';
+    document.getElementById('row-ltc').style.fontWeight = '';
+    document.getElementById('row-ltarv').style.fontWeight = '';
+    constraintNote.style.display = 'none';
+  }
 
   document.getElementById('res-origination').textContent = '$' + origFee.toLocaleString();
   document.getElementById('res-uwfee').textContent = '$' + uwFee.toLocaleString();
-  document.getElementById('res-appraisal').textContent = '$' + appraisalCost.toLocaleString();
   document.getElementById('res-totalfees').textContent = '$' + totalFees.toLocaleString();
 
   // GUC Slider setup
@@ -1251,6 +1562,69 @@ function submitLead(e) {
 
   return false;
 }
+// ─── EDIT INPUTS PAGE ───
+function showEditInputs() {
+  // Clone options from original selects to edit selects
+  const fields = [
+    {from: 'experience', to: 'edit-experience'},
+    {from: 'fico', to: 'edit-fico'},
+    {from: 'projectType', to: 'edit-projectType'},
+    {from: 'assetType', to: 'edit-assetType'},
+    {from: 'dealType', to: 'edit-dealType'},
+  ];
+  fields.forEach(f => {
+    const src = document.getElementById(f.from);
+    const dst = document.getElementById(f.to);
+    dst.innerHTML = src.innerHTML;
+    dst.value = src.value;
+  });
+  document.getElementById('edit-foreignNational').value = toggleValues.foreignNational || 'No';
+  document.getElementById('edit-purchasePrice').value = document.getElementById('purchasePrice').value;
+  document.getElementById('edit-asIsValue').value = document.getElementById('asIsValue').value;
+  document.getElementById('edit-rehabBudget').value = document.getElementById('rehabBudget').value;
+  document.getElementById('edit-arv').value = document.getElementById('arv').value;
+  document.getElementById('edit-loanTerm').value = document.getElementById('loanTerm').value;
+  document.getElementById('edit-recourse').value = document.getElementById('recourse').value;
+
+  // Hide rehab/arv for Bridge
+  const pt = document.getElementById('edit-projectType').value;
+  document.getElementById('edit-rehab-item').style.display = pt === 'Bridge' ? 'none' : 'block';
+  document.getElementById('edit-arv-item').style.display = pt === 'Bridge' ? 'none' : 'block';
+  document.getElementById('edit-aiv-item').style.display = document.getElementById('edit-dealType').value === 'Purchase' ? 'none' : 'block';
+
+  // Show step 5 without changing progress bar (keep step 4 active look)
+  document.querySelectorAll('.step-card').forEach(c => c.classList.remove('active'));
+  document.getElementById('step-5').classList.add('active');
+  window.scrollTo({ top: 200, behavior: 'smooth' });
+}
+
+// Listen for project type change in edit page
+document.getElementById('edit-projectType')?.addEventListener('change', function() {
+  const pt = this.value;
+  document.getElementById('edit-rehab-item').style.display = pt === 'Bridge' ? 'none' : 'block';
+  document.getElementById('edit-arv-item').style.display = pt === 'Bridge' ? 'none' : 'block';
+});
+document.getElementById('edit-dealType')?.addEventListener('change', function() {
+  document.getElementById('edit-aiv-item').style.display = this.value === 'Purchase' ? 'none' : 'block';
+});
+
+function recalcFromEdit() {
+  // Copy values back to original fields
+  document.getElementById('experience').value = document.getElementById('edit-experience').value;
+  document.getElementById('fico').value = document.getElementById('edit-fico').value;
+  toggleValues.foreignNational = document.getElementById('edit-foreignNational').value;
+  document.getElementById('projectType').value = document.getElementById('edit-projectType').value;
+  document.getElementById('assetType').value = document.getElementById('edit-assetType').value;
+  document.getElementById('dealType').value = document.getElementById('edit-dealType').value;
+  document.getElementById('purchasePrice').value = document.getElementById('edit-purchasePrice').value;
+  document.getElementById('asIsValue').value = document.getElementById('edit-asIsValue').value;
+  document.getElementById('rehabBudget').value = document.getElementById('edit-rehabBudget').value;
+  document.getElementById('arv').value = document.getElementById('edit-arv').value;
+  document.getElementById('loanTerm').value = document.getElementById('edit-loanTerm').value;
+  document.getElementById('recourse').value = document.getElementById('edit-recourse').value;
+  calculateRTL();
+}
+
 </script>
 </body>
 </html>

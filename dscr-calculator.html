@@ -28,7 +28,7 @@
 * { margin: 0; padding: 0; box-sizing: border-box; }
 body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(--text-primary); line-height: 1.6; }
 
-.nav { position: sticky; top: 0; z-index: 100; background: rgba(242,239,233,0.95); backdrop-filter: blur(10px); padding: 16px 40px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--gray-100); }
+.nav { position: sticky; top: 0; z-index: 100; background: rgba(242,239,233,0.95); backdrop-filter: blur(10px); padding: 20px 40px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--gray-100); }
 .nav-logo { font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 800; font-size: 22px; color: var(--green); text-decoration: none; display: flex; align-items: center; gap: 8px; }
 .nav-logo span { color: var(--gold); }
 .nav-links { display: flex; align-items: center; gap: 32px; }
@@ -96,6 +96,18 @@ body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(
 
 .results-note { font-size: 13px; color: var(--gray-500); margin-bottom: 24px; padding: 12px 16px; background: #fefce8; border-radius: 8px; border: 1px solid #fef08a; }
 
+/* ─── Edit Inputs ─── */
+.edit-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px; }
+.edit-item { background: var(--cream); border-radius: 8px; padding: 12px 14px; }
+.edit-item .edit-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--gray-500); margin-bottom: 2px; }
+.edit-item select, .edit-item input {
+  width: 100%; padding: 8px 10px; border: 1.5px solid var(--gray-100); border-radius: 6px;
+  font-size: 14px; font-family: 'DM Sans', sans-serif; color: var(--text-primary); background: var(--white);
+  margin-top: 4px;
+}
+.edit-item .currency-wrap input { padding-left: 24px; }
+.edit-item .currency-wrap::before { left: 10px; font-size: 14px; }
+
 /* ─── Slider Section ─── */
 .slider-section { background: var(--cream); border-radius: 10px; padding: 20px; margin-bottom: 24px; }
 .slider-section h3 { font-size: 14px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 16px; color: var(--green); }
@@ -157,7 +169,7 @@ input[type="range"]::-moz-range-thumb { width: 22px; height: 22px; border-radius
 
 /* ─── Footer ─── */
 .footer {
-  background: var(--green); color: rgba(255,255,255,0.7); padding: 40px 40px 24px;
+  background: var(--green); color: rgba(255,255,255,0.7); padding: 56px 40px;
 }
 .footer a { color: var(--gold); text-decoration: none; }
 .footer a:hover { text-decoration: underline; }
@@ -188,7 +200,7 @@ input[type="range"]::-moz-range-thumb { width: 22px; height: 22px; border-radius
 
 <nav class="nav">
   <a href="https://ledgertc.com" class="nav-logo">
-    <img src="https://ledgertc.com/logo-color.png" alt="Ledger Trade &amp; Capital" style="height:40px;">
+    <img src="https://ledgertc.com/logo-color.png" alt="Ledger Trade &amp; Capital" style="height:38px;">
   </a>
   <div class="nav-links">
     <div class="nav-dropdown">
@@ -375,11 +387,23 @@ input[type="range"]::-moz-range-thumb { width: 22px; height: 22px; border-radius
 
     <div class="field-group">
       <label>Loan Purpose</label>
-      <select id="loanPurpose">
+      <select id="loanPurpose" onchange="showPurchaseRecencyDSCR()">
         <option value="Purchase">Purchase</option>
         <option value="R/T Refinance">Rate/Term Refinance</option>
         <option value="C/O Refinance">Cash-Out Refinance</option>
       </select>
+    </div>
+
+    <div class="field-group" id="purchaseDateGroup-dscr" style="display:none;">
+      <label>When was the property originally purchased?</label>
+      <select id="purchaseRecency" onchange="updateDelayedPurchaseDSCR()">
+        <option value="">Select...</option>
+        <option value="over5">More than 5 months ago</option>
+        <option value="within5">Within the last 5 months</option>
+      </select>
+      <p class="field-hint" id="delayed-purchase-note-dscr" style="display:none; color:#b45309;">
+        Loans refinanced within 5 months of purchase are treated as delayed purchases and sized off the original purchase price.
+      </p>
     </div>
 
     <div class="field-group">
@@ -390,13 +414,7 @@ input[type="range"]::-moz-range-thumb { width: 22px; height: 22px; border-radius
       </div>
     </div>
 
-    <div class="field-group">
-      <label>Cash-Out Refinance?</label>
-      <div class="toggle-group">
-        <button type="button" class="toggle-btn selected" data-field="cashOut" data-value="No" onclick="toggleSelect(this)">No</button>
-        <button type="button" class="toggle-btn" data-field="cashOut" data-value="Yes" onclick="toggleSelect(this)">Yes</button>
-      </div>
-    </div>
+
 
     <div class="field-group">
       <label>Prepayment Penalty</label>
@@ -438,10 +456,7 @@ input[type="range"]::-moz-range-thumb { width: 22px; height: 22px; border-radius
         <div class="result-value" id="res-dscr">--</div>
         <div class="result-detail" id="res-dscr-detail"></div>
       </div>
-      <div class="result-card">
-        <div class="result-label">Program</div>
-        <div class="result-value" id="res-program" style="font-size:18px;">--</div>
-      </div>
+
     </div>
 
     <!-- Sliders: LTV and Prepay -->
@@ -507,7 +522,7 @@ input[type="range"]::-moz-range-thumb { width: 22px; height: 22px; border-radius
     </div>
 
     <div class="btn-row">
-      <button class="btn btn-secondary" onclick="prevStep(4)">&larr; Adjust Inputs</button>
+      <button class="btn btn-secondary" onclick="showEditInputsDSCR()">&larr; Edit Inputs</button>
     </div>
 
     <div class="lead-form-section" id="lead-section">
@@ -535,12 +550,125 @@ input[type="range"]::-moz-range-thumb { width: 22px; height: 22px; border-radius
       </div>
     </div>
   </div>
+  <!-- STEP 5: Edit Inputs -->
+  <div class="step-card" id="step-5">
+    <h2>Edit Your Inputs</h2>
+    <p class="step-subtitle">Change any value below and recalculate.</p>
+
+    <div class="edit-grid">
+      <div class="edit-item">
+        <div class="edit-label">Credit Score</div>
+        <select id="edit-fico"></select>
+      </div>
+      <div class="edit-item">
+        <div class="edit-label">Foreign National</div>
+        <select id="edit-foreignNational">
+          <option value="No">No</option>
+          <option value="Yes">Yes</option>
+        </select>
+      </div>
+      <div class="edit-item">
+        <div class="edit-label">Property Type</div>
+        <select id="edit-propertyType"></select>
+      </div>
+      <div class="edit-item">
+        <div class="edit-label">State</div>
+        <select id="edit-state"></select>
+      </div>
+      <div class="edit-item">
+        <div class="edit-label">Property Value</div>
+        <div class="currency-wrap"><input type="text" id="edit-arv" oninput="formatCurrency(this)"></div>
+      </div>
+      <div class="edit-item">
+        <div class="edit-label">Monthly Rent</div>
+        <div class="currency-wrap"><input type="text" id="edit-rent" oninput="formatCurrency(this)"></div>
+      </div>
+      <div class="edit-item">
+        <div class="edit-label">Annual Taxes</div>
+        <div class="currency-wrap"><input type="text" id="edit-taxes" oninput="formatCurrency(this)"></div>
+      </div>
+      <div class="edit-item">
+        <div class="edit-label">Annual Insurance</div>
+        <div class="currency-wrap"><input type="text" id="edit-insurance" oninput="formatCurrency(this)"></div>
+      </div>
+      <div class="edit-item">
+        <div class="edit-label">Annual HOA</div>
+        <div class="currency-wrap"><input type="text" id="edit-hoa" oninput="formatCurrency(this)"></div>
+      </div>
+      <div class="edit-item">
+        <div class="edit-label">Desired LTV</div>
+        <select id="edit-ltv">
+          <option value="0.50">50%</option><option value="0.55">55%</option>
+          <option value="0.60">60%</option><option value="0.65">65%</option>
+          <option value="0.70">70%</option><option value="0.75">75%</option>
+          <option value="0.80">80%</option>
+        </select>
+      </div>
+      <div class="edit-item">
+        <div class="edit-label">Loan Purpose</div>
+        <select id="edit-loanPurpose">
+          <option value="Purchase">Purchase</option>
+          <option value="R/T Refinance">Rate/Term Refinance</option>
+          <option value="C/O Refinance">Cash-Out Refinance</option>
+        </select>
+      </div>
+      <div class="edit-item" id="editPurchaseRecencyGroup" style="display:none;">
+        <div class="edit-label">Purchase Timing</div>
+        <select id="edit-purchaseRecency">
+          <option value="">Select...</option>
+          <option value="over5">More than 5 months ago</option>
+          <option value="within5">Within last 5 months</option>
+        </select>
+      </div>
+      <div class="edit-item">
+        <div class="edit-label">Interest Only</div>
+        <select id="edit-io">
+          <option value="Yes">Yes</option>
+          <option value="No">No (Fully Amortizing)</option>
+        </select>
+      </div>
+      <div class="edit-item">
+        <div class="edit-label">Prepay Penalty</div>
+        <select id="edit-prepay">
+          <option value="36">3-Year Stepdown</option>
+          <option value="60">5-Year Stepdown</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn btn-secondary" onclick="goToStep(4)">&larr; Back to Results</button>
+      <button class="btn btn-primary" onclick="recalcFromEditDSCR()">Recalculate &rarr;</button>
+    </div>
+
+    <div class="lead-form-section">
+      <div>
+        <h3>Want a Formal Quote?</h3>
+        <p class="lead-subtitle">Enter your details and a loan officer will reach out within one business day.</p>
+        <form name="dscr-calculator-lead-edit" method="POST" data-netlify="true" netlify-honeypot="bot-field" onsubmit="return submitLead(event)">
+          <input type="hidden" name="form-name" value="dscr-calculator-lead">
+          <input type="hidden" name="bot-field">
+          <input type="hidden" name="calculator-results" id="hidden-results-edit">
+          <div class="field-row" style="gap:12px;">
+            <input type="text" name="first-name" placeholder="First name" required>
+            <input type="text" name="last-name" placeholder="Last name" required>
+          </div>
+          <input type="email" name="email" placeholder="Email address">
+          <input type="tel" name="phone" placeholder="Phone number">
+          <p style="font-size:12px; opacity:0.6; margin:-8px 0 8px;">Email or phone required.</p>
+          <textarea name="notes" placeholder="Anything else? (optional)"></textarea>
+          <button type="submit" class="btn btn-primary">Submit Request &rarr;</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
 </div>
 
 <footer class="footer">
   <div class="footer-inner">
     <div class="footer-col footer-logo-col">
-      <img src="https://ledgertc.com/logo-inverse.png" alt="Ledger Trade &amp; Capital" style="height:36px;">
+      <img src="https://ledgertc.com/logo-inverse.png" alt="Ledger Trade &amp; Capital" style="height:42px;">
     </div>
     <div class="footer-col footer-center">
       <p>&copy; 2026 Ledger Trade &amp; Capital. All rights reserved.</p>
@@ -550,9 +678,6 @@ input[type="range"]::-moz-range-thumb { width: 22px; height: 22px; border-radius
       <p>60 Broad Street, Suite 2428, New York, NY 10004</p>
       <p><a href="tel:201-749-1691">201-749-1691</a> | <a href="mailto:Info@ledgertc.com">Info@ledgertc.com</a> | <a href="https://www.linkedin.com/company/ledger-trade-capital/" target="_blank">LinkedIn</a></p>
     </div>
-  </div>
-  <div class="footer-disclaimer">
-    Estimates are for informational purposes only. All loans subject to credit approval, underwriting review, and property eligibility. NMLS# pending. Equal Housing Lender.
   </div>
 </footer>
 
@@ -1067,6 +1192,36 @@ function computeDSCR(fico, isFN, propType, stateTier, arv, monthlyRent, annualTa
     calcIncentive({ ...inputs, isCrossed: true }),
   ].filter(r => r !== null);
 
+  // If no results with current settings, try without IO at high LTV
+  if (allResults.length === 0 && io && ltv >= 0.80) {
+    const nonIOInputs = { ...inputs, io: false };
+    const fallbackResults = [
+      calcBase(nonIOInputs),
+      calcAdvantage(nonIOInputs),
+      calcIncentive(nonIOInputs),
+      calcBase({ ...nonIOInputs, isCrossed: true }),
+      calcIncentive({ ...nonIOInputs, isCrossed: true }),
+    ].filter(r => r !== null);
+    if (fallbackResults.length > 0) {
+      fallbackResults.sort((a, b) => a.rate - b.rate);
+      const fb = fallbackResults[0];
+      const fbRate = ceilEighth(fb.rate) / 100;
+      const fbMonthlyPI = pmt(fbRate, 360, loanAmt);
+      const fbMonthlyPITIA = fbMonthlyPI + annualTaxes/12 + annualInsurance/12 + annualHOA/12;
+      return {
+        rate: ceilEighth(fb.rate),
+        loanAmt,
+        monthlyPI: fbMonthlyPI,
+        monthlyPITIA: fbMonthlyPITIA,
+        finalDSCR: monthlyRent / fbMonthlyPITIA,
+        program: fb.program,
+        io: false,
+        ioFallback: true,
+        monthlyRent, monthlyTaxes: annualTaxes/12, monthlyIns: annualInsurance/12,
+        monthlyHOA: annualHOA/12, ltv, prepay, loanPurpose, cashOut,
+      };
+    }
+  }
   if (allResults.length === 0) return null;
 
   allResults.sort((a, b) => a.rate - b.rate);
@@ -1111,14 +1266,22 @@ function computeDSCR(fico, isFN, propType, stateTier, arv, monthlyRent, annualTa
 function renderResults(r) {
   if (!r) {
     document.getElementById('res-rate').textContent = 'N/A';
-    document.getElementById('res-rate-detail').textContent = 'This combination is not eligible under our current programs. Try adjusting LTV, credit score, or prepayment terms.';
+    // Build specific reasons
+    const reasons = [];
+    const fico = parseInt(document.getElementById('fico').value);
+    const ltv = parseFloat(document.getElementById('ltv').value);
+    const io = toggleValues.interestOnly === 'Yes';
+    if (io && ltv >= 0.80) reasons.push('Interest-only is not available at 80% LTV');
+    if (fico < 660) reasons.push('Minimum FICO is 660');
+    if (ltv >= 0.80 && fico < 680) reasons.push('80% LTV requires FICO 680+');
+    const msg = reasons.length > 0 ? reasons.join('. ') + '.' : 'This combination is not eligible. Try adjusting LTV, credit score, or prepayment terms.';
+    document.getElementById('res-rate-detail').textContent = msg;
     document.getElementById('res-loanamt').textContent = '--';
     document.getElementById('res-loanamt-detail').textContent = '';
     document.getElementById('res-payment').textContent = 'N/A';
     document.getElementById('res-payment-detail').textContent = '';
     document.getElementById('res-dscr').textContent = 'N/A';
     document.getElementById('res-dscr-detail').textContent = '';
-    document.getElementById('res-program').textContent = 'No eligible program';
     return;
   }
 
@@ -1130,10 +1293,9 @@ function renderResults(r) {
   document.getElementById('res-loanamt').textContent = '$' + r.loanAmt.toLocaleString();
   document.getElementById('res-loanamt-detail').textContent = (r.ltv * 100).toFixed(0) + '% LTV';
   document.getElementById('res-payment').textContent = '$' + Math.round(r.monthlyPITIA).toLocaleString();
-  document.getElementById('res-payment-detail').textContent = r.io ? 'Interest only' : 'Fully amortizing (P&I + TIA)';
+  document.getElementById('res-payment-detail').textContent = r.ioFallback ? 'Fully amortizing (IO not available at this LTV)' : r.io ? 'Interest only' : 'Fully amortizing (P&I + TIA)';
   document.getElementById('res-dscr').textContent = r.finalDSCR.toFixed(2) + 'x';
   document.getElementById('res-dscr-detail').textContent = r.finalDSCR >= 1.25 ? 'Strong coverage' : r.finalDSCR >= 1.0 ? 'Meets minimum' : 'Below 1.0x (may require exceptions)';
-  document.getElementById('res-program').textContent = r.program;
 
   document.getElementById('res-rent').textContent = '$' + r.monthlyRent.toLocaleString();
   document.getElementById('res-pi').textContent = '-$' + Math.round(r.monthlyPI).toLocaleString();
@@ -1184,7 +1346,7 @@ function calculateDSCR() {
   const ltv = parseFloat(document.getElementById('ltv').value);
   const loanPurpose = document.getElementById('loanPurpose').value;
   const io = toggleValues.interestOnly === 'Yes';
-  const cashOut = toggleValues.cashOut === 'Yes';
+  const cashOut = loanPurpose === 'C/O Refinance';
   const prepay = document.getElementById('prepay').value;
 
   // Store state for slider recalculation
@@ -1259,6 +1421,76 @@ function submitLead(e) {
   });
   return false;
 }
+// ─── EDIT INPUTS PAGE (DSCR) ───
+function showEditInputsDSCR() {
+  ['fico','propertyType','state'].forEach(id => {
+    const src = document.getElementById(id);
+    const dst = document.getElementById('edit-' + id);
+    dst.innerHTML = src.innerHTML;
+    dst.value = src.value;
+  });
+  document.getElementById('edit-foreignNational').value = toggleValues.foreignNational || 'No';
+  document.getElementById('edit-arv').value = document.getElementById('arv').value;
+  document.getElementById('edit-rent').value = document.getElementById('rent').value;
+  document.getElementById('edit-taxes').value = document.getElementById('taxes').value;
+  document.getElementById('edit-insurance').value = document.getElementById('insurance').value;
+  document.getElementById('edit-hoa').value = document.getElementById('hoa').value;
+  document.getElementById('edit-ltv').value = document.getElementById('ltv').value;
+  document.getElementById('edit-loanPurpose').value = document.getElementById('loanPurpose').value;
+    const eLpVal = document.getElementById('edit-loanPurpose').value;
+    if (eLpVal === 'R/T Refinance' || eLpVal === 'C/O Refinance') {
+      document.getElementById('editPurchaseRecencyGroup').style.display = 'block';
+      document.getElementById('edit-purchaseRecency').value = document.getElementById('purchaseRecency').value;
+    } else {
+      document.getElementById('editPurchaseRecencyGroup').style.display = 'none';
+    }
+  document.getElementById('edit-io').value = toggleValues.interestOnly || 'Yes';
+  document.getElementById('edit-prepay').value = document.getElementById('prepay').value;
+
+  document.querySelectorAll('.step-card').forEach(c => c.classList.remove('active'));
+  document.getElementById('step-5').classList.add('active');
+  window.scrollTo({ top: 200, behavior: 'smooth' });
+}
+
+function recalcFromEditDSCR() {
+  document.getElementById('fico').value = document.getElementById('edit-fico').value;
+  toggleValues.foreignNational = document.getElementById('edit-foreignNational').value;
+  document.getElementById('propertyType').value = document.getElementById('edit-propertyType').value;
+  document.getElementById('state').value = document.getElementById('edit-state').value;
+  document.getElementById('arv').value = document.getElementById('edit-arv').value;
+  document.getElementById('rent').value = document.getElementById('edit-rent').value;
+  document.getElementById('taxes').value = document.getElementById('edit-taxes').value;
+  document.getElementById('insurance').value = document.getElementById('edit-insurance').value;
+  document.getElementById('hoa').value = document.getElementById('edit-hoa').value;
+  document.getElementById('ltv').value = document.getElementById('edit-ltv').value;
+  document.getElementById('loanPurpose').value = document.getElementById('edit-loanPurpose').value;
+    document.getElementById('purchaseRecency').value = document.getElementById('edit-purchaseRecency').value || '';
+    showPurchaseRecencyDSCR();
+    updateDelayedPurchaseDSCR();
+  toggleValues.interestOnly = document.getElementById('edit-io').value;
+  document.getElementById('prepay').value = document.getElementById('edit-prepay').value;
+  calculateDSCR();
+}
+
+
+  function showPurchaseRecencyDSCR() {
+    const lp = document.getElementById('loanPurpose').value;
+    const grp = document.getElementById('purchaseDateGroup-dscr');
+    if (lp === 'R/T Refinance' || lp === 'C/O Refinance') {
+      grp.style.display = 'block';
+    } else {
+      grp.style.display = 'none';
+      document.getElementById('purchaseRecency').value = '';
+      document.getElementById('delayed-purchase-note-dscr').style.display = 'none';
+    }
+  }
+
+  function updateDelayedPurchaseDSCR() {
+    const val = document.getElementById('purchaseRecency').value;
+    const note = document.getElementById('delayed-purchase-note-dscr');
+    note.style.display = val === 'within5' ? 'block' : 'none';
+  }
+
 </script>
 </body>
 </html>
