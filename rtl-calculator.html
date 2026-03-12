@@ -272,13 +272,6 @@ input[type="range"]::-moz-range-thumb {
 .lead-success .checkmark { font-size: 48px; margin-bottom: 12px; }
 .lead-success p { font-size: 16px; opacity: 0.9; }
 
-.footer {
-  background: var(--green);
-  color: rgba(255,255,255,0.7);
-  padding: 30px 40px; text-align: center; font-size: 13px;
-}
-.footer a { color: var(--gold); text-decoration: none; }
-
 @media (max-width: 640px) {
   .nav { padding: 12px 16px; }
   .nav-links { display: none; }
@@ -293,6 +286,51 @@ input[type="range"]::-moz-range-thumb {
   .progress-line { width: 30px; }
   .lead-form-section { padding: 24px 20px; }
 }
+
+/* ─── Dropdown Nav ─── */
+.nav-dropdown { position: relative; }
+.nav-dropdown-trigger { display: flex; align-items: center; gap: 4px; cursor: pointer; }
+.dropdown-arrow { font-size: 10px; }
+.nav-dropdown-menu {
+  display: none; position: absolute; top: 100%; left: 50%; transform: translateX(-50%);
+  background: var(--white); border: 1px solid var(--gray-100); border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.1); padding: 8px 0; min-width: 200px; z-index: 200;
+  margin-top: 8px;
+}
+.nav-dropdown:hover .nav-dropdown-menu { display: block; }
+.nav-dropdown-menu a {
+  display: block; padding: 10px 20px; font-size: 14px; color: var(--text-secondary);
+  text-decoration: none; font-weight: 500; transition: all 0.15s;
+}
+.nav-dropdown-menu a:hover { background: var(--cream); color: var(--green); }
+
+/* ─── Footer ─── */
+.footer {
+  background: var(--green); color: rgba(255,255,255,0.7); padding: 40px 40px 24px;
+}
+.footer a { color: var(--gold); text-decoration: none; }
+.footer a:hover { text-decoration: underline; }
+.footer-inner {
+  display: flex; align-items: flex-start; justify-content: space-between;
+  max-width: 1100px; margin: 0 auto; gap: 32px;
+}
+.footer-col { flex: 1; }
+.footer-logo-col { flex: 0 0 auto; }
+.footer-center { text-align: center; }
+.footer-center p { margin-bottom: 6px; font-size: 13px; }
+.footer-right { text-align: right; }
+.footer-right p { margin-bottom: 6px; font-size: 13px; }
+.footer-disclaimer {
+  text-align: center; font-size: 11px; opacity: 0.5; margin-top: 24px;
+  max-width: 800px; margin-left: auto; margin-right: auto; padding-top: 16px;
+  border-top: 1px solid rgba(255,255,255,0.1);
+}
+@media (max-width: 640px) {
+  .footer-inner { flex-direction: column; align-items: center; text-align: center; gap: 20px; }
+  .footer-right { text-align: center; }
+  .footer-center { text-align: center; }
+}
+
 </style>
 </head>
 <body>
@@ -300,17 +338,36 @@ input[type="range"]::-moz-range-thumb {
 <!-- NAV -->
 <nav class="nav">
   <a href="https://ledgertc.com" class="nav-logo">
-    <svg width="32" height="32" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <rect width="40" height="40" rx="6" fill="#c49a3c"/>
-      <path d="M10 28V12l10-4v8l-5 2v10H10z M20 16l5-2v14h-5V16z M25 14l5-2v16h-5V14z" fill="#2b4a42"/>
-    </svg>
-    LEDGER <span>T&amp;C</span>
+    <img src="https://ledgertc.com/logo-color.png" alt="Ledger Trade &amp; Capital" style="height:40px;">
   </a>
   <div class="nav-links">
-    <a href="https://ledgertc.com/#">Loan Products</a>
-    <a href="https://ledgertc.com/#">Who We Are</a>
+    <div class="nav-dropdown">
+      <a href="#" class="nav-dropdown-trigger" onclick="return false;">Loan Products <span class="dropdown-arrow">&#9662;</span></a>
+      <div class="nav-dropdown-menu">
+        <a href="https://ledgertc.com/vertical-construction-loans">New Construction</a>
+        <a href="https://ledgertc.com/dscr">DSCR Rental</a>
+        <a href="https://ledgertc.com/bridge">Bridge</a>
+        <a href="https://ledgertc.com/fix-and-flip">Fix &amp; Flip</a>
+        <a href="https://ledgertc.com/build-to-rent">Build to Rent</a>
+      </div>
+    </div>
+    <div class="nav-dropdown">
+      <a href="#" class="nav-dropdown-trigger" onclick="return false;">Who We Are <span class="dropdown-arrow">&#9662;</span></a>
+      <div class="nav-dropdown-menu">
+        <a href="https://ledgertc.com/what-we-do">What We Do</a>
+        <a href="https://ledgertc.com/team">Meet the Team</a>
+        <a href="https://ledgertc.com/where-we-lend">Where We Lend</a>
+      </div>
+    </div>
     <a href="https://ledgertc.com/broker-partners">Broker Partners</a>
-    <a href="https://ledgertc.com/#" class="nav-cta">Apply Now</a>
+    <div class="nav-dropdown">
+      <a href="#" class="nav-dropdown-trigger" onclick="return false;">Client Portal <span class="dropdown-arrow">&#9662;</span></a>
+      <div class="nav-dropdown-menu">
+        <a href="https://trustpoint.ai" target="_blank">Submit Draws</a>
+        <a href="https://elphimortgage.com" target="_blank">Loan Diligence</a>
+      </div>
+    </div>
+    <a href="https://ledgertc.com/get-in-touch" class="nav-cta">Apply Now</a>
   </div>
 </nav>
 
@@ -609,7 +666,6 @@ input[type="range"]::-moz-range-thumb {
 
     <div class="btn-row">
       <button class="btn btn-secondary" onclick="prevStep(4)">&larr; Adjust Inputs</button>
-      <button class="btn btn-primary" onclick="document.getElementById('lead-section').scrollIntoView({behavior:'smooth'})">Get a Formal Quote &rarr;</button>
     </div>
 
     <!-- Lead Form -->
@@ -625,9 +681,10 @@ input[type="range"]::-moz-range-thumb {
             <input type="text" name="first-name" placeholder="First name" required>
             <input type="text" name="last-name" placeholder="Last name" required>
           </div>
-          <input type="email" name="email" placeholder="Email address" required>
-          <input type="tel" name="phone" placeholder="Phone number">
-          <textarea name="notes" placeholder="Anything else we should know about your project?"></textarea>
+          <input type="email" name="email" placeholder="Email address" id="lead-email">
+          <input type="tel" name="phone" placeholder="Phone number" id="lead-phone">
+          <p style="font-size:12px; opacity:0.6; margin:-8px 0 8px;">Email or phone required (at least one).</p>
+          <textarea name="notes" placeholder="Anything else we should know? (optional)"></textarea>
           <button type="submit" class="btn btn-primary">Submit Request &rarr;</button>
         </form>
       </div>
@@ -641,16 +698,25 @@ input[type="range"]::-moz-range-thumb {
 </div>
 
 <!-- FOOTER -->
-<div class="footer">
-  &copy; 2026 Ledger Trade &amp; Capital. All rights reserved. &nbsp;|&nbsp;
-  <a href="https://ledgertc.com">ledgertc.com</a> &nbsp;|&nbsp;
-  201-749-1691 &nbsp;|&nbsp;
-  <a href="mailto:info@ledgertc.com">info@ledgertc.com</a>
-  <br><br>
-  <span style="opacity:0.5; font-size: 11px;">
+<footer class="footer">
+  <div class="footer-inner">
+    <div class="footer-col footer-logo-col">
+      <img src="https://ledgertc.com/logo-inverse.png" alt="Ledger Trade &amp; Capital" style="height:36px;">
+    </div>
+    <div class="footer-col footer-center">
+      <p>&copy; 2026 Ledger Trade &amp; Capital. All rights reserved.</p>
+      <p><a href="https://ledgertc.com/terms-and-conditions">Terms of Service</a> | <a href="https://ledgertc.com/privacy-policy">Privacy Policy</a></p>
+    </div>
+    <div class="footer-col footer-right">
+      <p>60 Broad Street, Suite 2428, New York, NY 10004</p>
+      <p><a href="tel:201-749-1691">201-749-1691</a> | <a href="mailto:Info@ledgertc.com">Info@ledgertc.com</a> | <a href="https://www.linkedin.com/company/ledger-trade-capital/" target="_blank">LinkedIn</a></p>
+    </div>
+  </div>
+  <div class="footer-disclaimer">
     Estimates are for informational purposes only. All loans subject to credit approval, underwriting review, and property eligibility. NMLS# pending. Equal Housing Lender.
-  </span>
-</div>
+  </div>
+</footer>
+
 
 <script>
 // ─── STATE ───
@@ -1162,6 +1228,12 @@ function updateHoldbackSlider(pct) {
 // ─── LEAD FORM ───
 function submitLead(e) {
   e.preventDefault();
+  const email = document.getElementById('lead-email').value.trim();
+  const phone = document.getElementById('lead-phone').value.trim();
+  if (!email && !phone) {
+    alert('Please provide either an email address or phone number.');
+    return false;
+  }
   const form = e.target;
   const formData = new FormData(form);
 

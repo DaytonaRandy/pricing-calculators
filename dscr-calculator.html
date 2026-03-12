@@ -125,9 +125,6 @@ input[type="range"]::-moz-range-thumb { width: 22px; height: 22px; border-radius
 
 .program-badge { display: inline-block; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; padding: 3px 10px; border-radius: 4px; background: var(--gold); color: var(--white); margin-top: 6px; }
 
-.footer { background: var(--green); color: rgba(255,255,255,0.7); padding: 30px 40px; text-align: center; font-size: 13px; }
-.footer a { color: var(--gold); text-decoration: none; }
-
 @media (max-width: 640px) {
   .nav { padding: 12px 16px; } .nav-links { display: none; }
   .hero { padding: 40px 20px; } .hero h1 { font-size: 28px; }
@@ -140,20 +137,87 @@ input[type="range"]::-moz-range-thumb { width: 22px; height: 22px; border-radius
   .lead-form-section { padding: 24px 20px; }
   .prepay-toggle-group { flex-direction: column; }
 }
+
+/* ─── Dropdown Nav ─── */
+.nav-dropdown { position: relative; }
+.nav-dropdown-trigger { display: flex; align-items: center; gap: 4px; cursor: pointer; }
+.dropdown-arrow { font-size: 10px; }
+.nav-dropdown-menu {
+  display: none; position: absolute; top: 100%; left: 50%; transform: translateX(-50%);
+  background: var(--white); border: 1px solid var(--gray-100); border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.1); padding: 8px 0; min-width: 200px; z-index: 200;
+  margin-top: 8px;
+}
+.nav-dropdown:hover .nav-dropdown-menu { display: block; }
+.nav-dropdown-menu a {
+  display: block; padding: 10px 20px; font-size: 14px; color: var(--text-secondary);
+  text-decoration: none; font-weight: 500; transition: all 0.15s;
+}
+.nav-dropdown-menu a:hover { background: var(--cream); color: var(--green); }
+
+/* ─── Footer ─── */
+.footer {
+  background: var(--green); color: rgba(255,255,255,0.7); padding: 40px 40px 24px;
+}
+.footer a { color: var(--gold); text-decoration: none; }
+.footer a:hover { text-decoration: underline; }
+.footer-inner {
+  display: flex; align-items: flex-start; justify-content: space-between;
+  max-width: 1100px; margin: 0 auto; gap: 32px;
+}
+.footer-col { flex: 1; }
+.footer-logo-col { flex: 0 0 auto; }
+.footer-center { text-align: center; }
+.footer-center p { margin-bottom: 6px; font-size: 13px; }
+.footer-right { text-align: right; }
+.footer-right p { margin-bottom: 6px; font-size: 13px; }
+.footer-disclaimer {
+  text-align: center; font-size: 11px; opacity: 0.5; margin-top: 24px;
+  max-width: 800px; margin-left: auto; margin-right: auto; padding-top: 16px;
+  border-top: 1px solid rgba(255,255,255,0.1);
+}
+@media (max-width: 640px) {
+  .footer-inner { flex-direction: column; align-items: center; text-align: center; gap: 20px; }
+  .footer-right { text-align: center; }
+  .footer-center { text-align: center; }
+}
+
 </style>
 </head>
 <body>
 
 <nav class="nav">
   <a href="https://ledgertc.com" class="nav-logo">
-    <svg width="32" height="32" viewBox="0 0 40 40" fill="none"><rect width="40" height="40" rx="6" fill="#c49a3c"/><path d="M10 28V12l10-4v8l-5 2v10H10z M20 16l5-2v14h-5V16z M25 14l5-2v16h-5V14z" fill="#2b4a42"/></svg>
-    LEDGER <span>T&amp;C</span>
+    <img src="https://ledgertc.com/logo-color.png" alt="Ledger Trade &amp; Capital" style="height:40px;">
   </a>
   <div class="nav-links">
-    <a href="https://ledgertc.com/#">Loan Products</a>
-    <a href="https://ledgertc.com/#">Who We Are</a>
+    <div class="nav-dropdown">
+      <a href="#" class="nav-dropdown-trigger" onclick="return false;">Loan Products <span class="dropdown-arrow">&#9662;</span></a>
+      <div class="nav-dropdown-menu">
+        <a href="https://ledgertc.com/vertical-construction-loans">New Construction</a>
+        <a href="https://ledgertc.com/dscr">DSCR Rental</a>
+        <a href="https://ledgertc.com/bridge">Bridge</a>
+        <a href="https://ledgertc.com/fix-and-flip">Fix &amp; Flip</a>
+        <a href="https://ledgertc.com/build-to-rent">Build to Rent</a>
+      </div>
+    </div>
+    <div class="nav-dropdown">
+      <a href="#" class="nav-dropdown-trigger" onclick="return false;">Who We Are <span class="dropdown-arrow">&#9662;</span></a>
+      <div class="nav-dropdown-menu">
+        <a href="https://ledgertc.com/what-we-do">What We Do</a>
+        <a href="https://ledgertc.com/team">Meet the Team</a>
+        <a href="https://ledgertc.com/where-we-lend">Where We Lend</a>
+      </div>
+    </div>
     <a href="https://ledgertc.com/broker-partners">Broker Partners</a>
-    <a href="https://ledgertc.com/#" class="nav-cta">Apply Now</a>
+    <div class="nav-dropdown">
+      <a href="#" class="nav-dropdown-trigger" onclick="return false;">Client Portal <span class="dropdown-arrow">&#9662;</span></a>
+      <div class="nav-dropdown-menu">
+        <a href="https://trustpoint.ai" target="_blank">Submit Draws</a>
+        <a href="https://elphimortgage.com" target="_blank">Loan Diligence</a>
+      </div>
+    </div>
+    <a href="https://ledgertc.com/get-in-touch" class="nav-cta">Apply Now</a>
   </div>
 </nav>
 
@@ -420,13 +484,21 @@ input[type="range"]::-moz-range-thumb { width: 22px; height: 22px; border-radius
         <span class="label">(-) Monthly Insurance</span>
         <span class="value" id="res-ins">--</span>
       </div>
-      <div class="breakdown-row">
+      <div class="breakdown-row" id="hoa-row">
         <span class="label">(-) Monthly HOA</span>
         <span class="value" id="res-hoa">--</span>
       </div>
       <div class="breakdown-row" style="font-weight:700; border-top: 2px solid var(--gray-300); margin-top:4px; padding-top:12px;">
         <span class="label" style="color:var(--text-primary);">Total PITIA</span>
         <span class="value" id="res-pitia">--</span>
+      </div>
+      <div class="breakdown-row" style="margin-top:8px;">
+        <span class="label">DSCR Ratio <span style="font-size:11px; font-style:italic; color:var(--gray-500);">(Rent &divide; PITIA)</span></span>
+        <span class="value" id="res-dscr-ratio">--</span>
+      </div>
+      <div class="breakdown-row" style="font-weight:700; border-top: 2px solid var(--green); margin-top:4px; padding-top:12px; color:var(--green);">
+        <span class="label" style="color:var(--green);">Net Cash Flow</span>
+        <span class="value" id="res-net-cashflow" style="color:var(--green);">--</span>
       </div>
     </div>
 
@@ -436,7 +508,6 @@ input[type="range"]::-moz-range-thumb { width: 22px; height: 22px; border-radius
 
     <div class="btn-row">
       <button class="btn btn-secondary" onclick="prevStep(4)">&larr; Adjust Inputs</button>
-      <button class="btn btn-primary" onclick="document.getElementById('lead-section').scrollIntoView({behavior:'smooth'})">Get a Formal Quote &rarr;</button>
     </div>
 
     <div class="lead-form-section" id="lead-section">
@@ -451,9 +522,10 @@ input[type="range"]::-moz-range-thumb { width: 22px; height: 22px; border-radius
             <input type="text" name="first-name" placeholder="First name" required>
             <input type="text" name="last-name" placeholder="Last name" required>
           </div>
-          <input type="email" name="email" placeholder="Email address" required>
-          <input type="tel" name="phone" placeholder="Phone number">
-          <textarea name="notes" placeholder="Tell us about your rental portfolio or investment goals."></textarea>
+          <input type="email" name="email" placeholder="Email address" id="lead-email">
+          <input type="tel" name="phone" placeholder="Phone number" id="lead-phone">
+          <p style="font-size:12px; opacity:0.6; margin:-8px 0 8px;">Email or phone required (at least one).</p>
+          <textarea name="notes" placeholder="Anything else we should know? (optional)"></textarea>
           <button type="submit" class="btn btn-primary">Submit Request &rarr;</button>
         </form>
       </div>
@@ -465,11 +537,25 @@ input[type="range"]::-moz-range-thumb { width: 22px; height: 22px; border-radius
   </div>
 </div>
 
-<div class="footer">
-  &copy; 2026 Ledger Trade &amp; Capital. All rights reserved. &nbsp;|&nbsp;
-  <a href="https://ledgertc.com">ledgertc.com</a> &nbsp;|&nbsp; 201-749-1691 &nbsp;|&nbsp; <a href="mailto:info@ledgertc.com">info@ledgertc.com</a>
-  <br><br><span style="opacity:0.5; font-size:11px;">Estimates are for informational purposes only. All loans subject to credit approval, underwriting review, and property eligibility. NMLS# pending. Equal Housing Lender.</span>
-</div>
+<footer class="footer">
+  <div class="footer-inner">
+    <div class="footer-col footer-logo-col">
+      <img src="https://ledgertc.com/logo-inverse.png" alt="Ledger Trade &amp; Capital" style="height:36px;">
+    </div>
+    <div class="footer-col footer-center">
+      <p>&copy; 2026 Ledger Trade &amp; Capital. All rights reserved.</p>
+      <p><a href="https://ledgertc.com/terms-and-conditions">Terms of Service</a> | <a href="https://ledgertc.com/privacy-policy">Privacy Policy</a></p>
+    </div>
+    <div class="footer-col footer-right">
+      <p>60 Broad Street, Suite 2428, New York, NY 10004</p>
+      <p><a href="tel:201-749-1691">201-749-1691</a> | <a href="mailto:Info@ledgertc.com">Info@ledgertc.com</a> | <a href="https://www.linkedin.com/company/ledger-trade-capital/" target="_blank">LinkedIn</a></p>
+    </div>
+  </div>
+  <div class="footer-disclaimer">
+    Estimates are for informational purposes only. All loans subject to credit approval, underwriting review, and property eligibility. NMLS# pending. Equal Housing Lender.
+  </div>
+</footer>
+
 
 <script>
 let currentStep = 1;
@@ -1053,8 +1139,30 @@ function renderResults(r) {
   document.getElementById('res-pi').textContent = '-$' + Math.round(r.monthlyPI).toLocaleString();
   document.getElementById('res-taxes').textContent = '-$' + Math.round(r.monthlyTaxes).toLocaleString();
   document.getElementById('res-ins').textContent = '-$' + Math.round(r.monthlyIns).toLocaleString();
-  document.getElementById('res-hoa').textContent = '-$' + Math.round(r.monthlyHOA).toLocaleString();
+  // HOA: hide row if zero
+  const hoaRow = document.getElementById('hoa-row');
+  if (r.monthlyHOA > 0) {
+    hoaRow.style.display = 'flex';
+    document.getElementById('res-hoa').textContent = '-$' + Math.round(r.monthlyHOA).toLocaleString();
+  } else {
+    hoaRow.style.display = 'none';
+  }
   document.getElementById('res-pitia').textContent = '-$' + Math.round(r.monthlyPITIA).toLocaleString();
+
+  // DSCR ratio in breakdown
+  document.getElementById('res-dscr-ratio').textContent = r.finalDSCR.toFixed(2) + 'x';
+
+  // Net Cash Flow
+  const netCashFlow = r.monthlyRent - r.monthlyPITIA;
+  const ncfEl = document.getElementById('res-net-cashflow');
+  if (netCashFlow >= 0) {
+    ncfEl.textContent = '+$' + Math.round(netCashFlow).toLocaleString();
+    ncfEl.style.color = 'var(--green)';
+  } else {
+    ncfEl.textContent = '-$' + Math.round(Math.abs(netCashFlow)).toLocaleString();
+    ncfEl.style.color = 'var(--error)';
+  }
+  document.getElementById('res-net-cashflow').parentElement.querySelector('.label').style.color = netCashFlow >= 0 ? 'var(--green)' : 'var(--error)';
 
   document.getElementById('hidden-results').value = JSON.stringify({
     program: r.program, rate: rateLow, loanAmt: r.loanAmt, monthlyPayment: Math.round(r.monthlyPITIA),
@@ -1130,6 +1238,12 @@ function recalcDSCR() {
 
 function submitLead(e) {
   e.preventDefault();
+  const email = document.getElementById('lead-email').value.trim();
+  const phone = document.getElementById('lead-phone').value.trim();
+  if (!email && !phone) {
+    alert('Please provide either an email address or phone number.');
+    return false;
+  }
   const form = e.target;
   const formData = new FormData(form);
   fetch('/', {
